@@ -2,10 +2,9 @@ dependencies:
 - octave_kernel
   
 name: pandas
-dependencies:
-    - python=3.7
-    - pandas==0.25.0
-    - matplotlib
-    - pytables
-    - openpyxl
-    - xlrd
+- python=3.7
+- pandas==0.25.0
+- matplotlib
+- pytables
+- openpyxl
+- xlrd

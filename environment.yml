@@ -1,7 +1,7 @@
 dependencies:
 - octave_kernel
 
-- python=3.8
+- python=3.7
 - pandas==0.25.0
 - seaborn
 - matplotlib

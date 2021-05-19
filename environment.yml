@@ -6,4 +6,6 @@ dependencies:
 - seaborn
 - matplotlib
 - pytables
+- openpyxl
+- xlrd
 

@@ -4,6 +4,7 @@ dependencies:
 - python=3.7
 - pandas==0.25.0
 - matplotlib
+- seaborn
 - pytables
 - openpyxl
 - xlrd

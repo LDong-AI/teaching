@@ -1,0 +1,46 @@
+<!--
+  可粘贴片段：把本文件 <section id="mu-rn-calc">…</section> 整块
+  插入到「第06次课_教学课件_混沌与分岔.html」费根鲍姆章节附近。
+  需要页面已加载 MathJax（或等价渲染），并引入与主课件一致的样式。
+-->
+<section id="mu-rn-calc" class="nl-card sec">
+  <h2>补充 · 分岔点 \(\mu_n\) 与超稳定点 \(R_n\) 的计算</h2>
+
+  <h3>1. 分岔点 \(\mu_n\)：令乘子 \(\lambda=-1\)</h3>
+  <p>对周期 \(p=2^{n-1}\) 轨 \(\{x_j\}\)，</p>
+  <p>\[
+    \lambda=\prod_{j=0}^{p-1}f'(x_j)=\prod_{j=0}^{p-1}\mu(1-2x_j).
+  \]</p>
+  <p>\(\lambda=-1\) 时发生倍周期（翻转）分岔，对应临界参数 \(\mu_n\)。</p>
+  <ul>
+    <li><strong>例 \(\mu_1\)</strong>：不动点 \(x^*=1-1/\mu\)，\(f'(x^*)=2-\mu=-1\Rightarrow\mu_1=3\)。</li>
+    <li><strong>例 \(\mu_2\)</strong>：2 周期乘子 \((f\circ f)'=-\mu^2+2\mu+4=-1\Rightarrow\mu_2=1+\sqrt{6}\approx3.44949\)。</li>
+    <li>\(n\ge3\)：高次方程，数值求 \(\lambda(\mu)=-1\)。</li>
+  </ul>
+
+  <h3>2. 超稳定点 \(R_n\)：令周期轨过临界点 \(1/2\)</h3>
+  <p>因 \(f'(1/2)=0\)，若 \(2^n\) 周期轨过 \(1/2\)，则 \(\lambda=0\)（超稳定）。条件写成</p>
+  <p>\[
+    f^{2^n}\!\left(\tfrac12\right)=\tfrac12.
+  \]</p>
+  <p>这不是“周期一定过 \(1/2\)”，而是挑选使周期轨过顶点的特殊参数。</p>
+  <ul>
+    <li>\(R_0=2\)（由 \(f(1/2)=1/2\)）</li>
+    <li>\(R_1=1+\sqrt{5}\approx3.23607\)（由 \(f(f(1/2))=1/2\)）</li>
+  </ul>
+
+  <h3>3. 二者关系</h3>
+  <p>\[
+    \mu_n&lt;R_n&lt;\mu_{n+1},\quad
+    \lim\mu_n=\lim R_n=\mu_\infty.
+  \]</p>
+  <p>\(R_n\neq\mu_n\)；精确分岔点仍解 \(\lambda=-1\)。二者的间隔比都趋于费根鲍姆常数</p>
+  <p>\[
+    \delta=\lim\frac{\mu_n-\mu_{n-1}}{\mu_{n+1}-\mu_n}
+    =\lim\frac{R_n-R_{n-1}}{R_{n+1}-R_n}
+    \approx4.66920.
+  \]</p>
+  <p>更完整的推导、表格与互动验算见：
+    <a href="./第06次课_补充_μ与Rn计算方法.html">第06次课补充 · μ 与 Rₙ 的计算方法</a>。
+  </p>
+</section>

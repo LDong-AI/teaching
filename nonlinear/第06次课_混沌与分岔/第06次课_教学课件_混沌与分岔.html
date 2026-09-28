@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>第06次课 · 混沌与分岔 | 非线性系统仿真实践</title>
+  <link rel="stylesheet" href="../nl-common.css">
+  <style>
+    .sec { margin-bottom: 18px; }
+    .sec h2 { margin: 0 0 10px; font-size: 1.2rem; }
+    .sec p, .sec li { font-size: 15px; color: #334155; }
+    .links a { display: inline-flex; margin: 0 10px 10px 0; }
+    .callout {
+      background: #f5f3ff; border: 1px solid #ddd6fe; border-left: 4px solid var(--nl-primary);
+      border-radius: 10px; padding: 12px 14px; margin: 12px 0; font-size: 14.5px;
+    }
+  </style>
+  <script>
+    window.MathJax = {
+      tex: { inlineMath: [['\\(', '\\)']], displayMath: [['\\[', '\\]']] }
+    };
+  </script>
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+</head>
+<body>
+  <header class="nl-top">
+    <a class="nl-brand" href="../"><span class="nl-badge">NL</span> 非线性系统仿真实践</a>
+    <div class="nl-actions" id="nl-auth-slot"></div>
+  </header>
+
+  <main class="nl-wrap">
+    <div class="nl-hero">
+      <h1>第06次课 · 混沌与分岔</h1>
+      <p>§1.2 描述性定义、Logistic、不动点与周期、分岔图；费根鲍姆常数发现/计算及 Logistic 验证。</p>
+    </div>
+
+    <section class="nl-card sec">
+      <h2>本仓库中的补充内容</h2>
+      <p>
+        线上站点 <span style="font-family:ui-monospace,monospace">course.hdeda.cn</span>
+        的完整课件正文若尚未同步，可先阅读下列补充专节（已写明 \(\mu_n\)、\(R_n\) 的原理、步骤与具体算例）。
+      </p>
+      <div class="links">
+        <a class="nl-btn nl-btn-primary" href="./第06次课_补充_μ与Rn计算方法.html">打开：μ 与 Rₙ 计算方法（完整版）</a>
+        <a class="nl-btn" href="./section-mu-rn.inc.html">查看：可粘贴片段</a>
+      </div>
+      <div class="callout">
+        核心结论预告：\(\mu_1=3\)，\(\mu_2=1+\sqrt{6}\)（由 \(\lambda=-1\)）；
+        \(R_0=2\)，\(R_1=1+\sqrt{5}\)（由 \(f^{2^n}(1/2)=1/2\)）；
+        且 \(\mu_n&lt;R_n&lt;\mu_{n+1}\)，二者都可用来逼近费根鲍姆 \(\delta\approx4.6692\)。
+      </div>
+    </section>
+
+    <!-- 将线上主课件其余章节合并到此处；以下为 μ/Rn 补充区块 -->
+    <!--#include virtual="./section-mu-rn.inc.html" -->
+    <section id="mu-rn-calc" class="nl-card sec">
+      <h2>补充 · 分岔点 \(\mu_n\) 与超稳定点 \(R_n\) 的计算</h2>
+      <p>详见完整版页面。下面给出课堂可直接口述的最短版。</p>
+      <ol>
+        <li><strong>\(\mu_n\)</strong>：周期 \(2^{n-1}\) 的乘子 \(\lambda=-1\)。例：\(\mu_1=3\)，\(\mu_2=1+\sqrt{6}\)。</li>
+        <li><strong>\(R_n\)</strong>：\(f^{2^n}(1/2)=1/2\)。例：\(R_0=2\)，\(R_1=1+\sqrt{5}\)。</li>
+        <li><strong>关系</strong>：\(\mu_n&lt;R_n&lt;\mu_{n+1}\)；间隔比 → 费根鲍姆常数 \(\delta\)。</li>
+      </ol>
+      <p><a href="./第06次课_补充_μ与Rn计算方法.html">进入完整推导、表格与互动验算 →</a></p>
+    </section>
+
+    <section class="nl-card sec" id="hw">
+      <h2>7 课堂练习与作业</h2>
+      <p class="note">题干仍以教材 §1.2.1–1.2.4 为准；本补充专节帮助理解其中分岔参数与费根鲍姆验证部分。</p>
+      <ul>
+        <li>解析推导 \(\mu_1=3\) 与 \(\mu_2=1+\sqrt{6}\)，并说明每一步用到的稳定性条件。</li>
+        <li>由 \(f(f(1/2))=1/2\) 求出 \(R_1\)，并验证此时乘子 \(\lambda=0\)。</li>
+        <li>用至少四个 \(R_n\)（或 \(\mu_n\)）计算 \(\delta_n\)，观察是否逼近 \(4.6692\ldots\)。</li>
+      </ul>
+    </section>
+  </main>
+
+  <script src="../auth.js"></script>
+  <script>if (window.NlAuth) NlAuth.mountHeader();</script>
+</body>
+</html>

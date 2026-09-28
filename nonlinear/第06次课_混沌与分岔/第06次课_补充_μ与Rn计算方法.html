@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>第06次课补充 · μ 与 Rₙ 的计算方法 | 非线性系统仿真实践</title>
+  <link rel="stylesheet" href="../nl-common.css">
+  <style>
+    .sec { margin-bottom: 18px; }
+    .sec h2 { margin: 0 0 10px; font-size: 1.2rem; }
+    .sec h3 { margin: 18px 0 8px; font-size: 1.05rem; }
+    .sec p, .sec li { font-size: 15px; color: #334155; }
+    .sec ul, .sec ol { padding-left: 1.3em; }
+    .sec li { margin: 4px 0; }
+    .callout {
+      background: #f5f3ff; border: 1px solid #ddd6fe; border-left: 4px solid var(--nl-primary);
+      border-radius: 10px; padding: 12px 14px; margin: 12px 0; font-size: 14.5px;
+    }
+    .callout.ok { background: #ecfdf5; border-color: #a7f3d0; border-left-color: #059669; }
+    .callout.warn { background: #fffbeb; border-color: #fde68a; border-left-color: #d97706; }
+    .formula {
+      overflow-x: auto; background: #0f172a; color: #e2e8f0; border-radius: 10px;
+      padding: 14px 16px; margin: 12px 0; font-size: 15px; line-height: 1.7;
+    }
+    .formula .mjx-chtml { color: #e2e8f0 !important; }
+    table.data {
+      width: 100%; border-collapse: collapse; font-size: 14px; margin: 12px 0;
+      background: #fff;
+    }
+    table.data th, table.data td {
+      border: 1px solid var(--nl-border); padding: 8px 10px; text-align: left;
+    }
+    table.data th { background: #f8fafc; color: #0f172a; }
+    table.data td.num { font-variant-numeric: tabular-nums; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+    .steps { counter-reset: step; list-style: none; padding: 0; }
+    .steps li {
+      position: relative; padding: 10px 12px 10px 48px; margin: 8px 0;
+      background: #fff; border: 1px solid var(--nl-border); border-radius: 10px;
+    }
+    .steps li::before {
+      counter-increment: step; content: counter(step);
+      position: absolute; left: 12px; top: 12px; width: 26px; height: 26px;
+      border-radius: 8px; background: var(--nl-grad); color: #fff;
+      display: grid; place-items: center; font-size: 13px; font-weight: 700;
+    }
+    .demo {
+      display: grid; gap: 12px; grid-template-columns: 1.1fr 0.9fr;
+    }
+    @media (max-width: 720px) { .demo { grid-template-columns: 1fr; } }
+    .demo label { margin-top: 4px; }
+    .demo input { margin-bottom: 8px; }
+    .out {
+      background: #0b1220; color: #d1fae5; border-radius: 10px; padding: 12px 14px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 13px; white-space: pre-wrap; min-height: 160px; line-height: 1.55;
+    }
+    .toc a { display: inline-block; margin: 0 10px 8px 0; }
+    .kbd {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      background: #f1f5f9; border: 1px solid #e2e8f0; border-radius: 6px;
+      padding: 1px 6px; font-size: 0.92em;
+    }
+    .merge-note {
+      font-size: 13px; color: var(--nl-muted); border-top: 1px dashed var(--nl-border);
+      margin-top: 18px; padding-top: 12px;
+    }
+  </style>
+  <script>
+    window.MathJax = {
+      tex: { inlineMath: [['\\(', '\\)']], displayMath: [['\\[', '\\]']] },
+      svg: { fontCache: 'global' }
+    };
+  </script>
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+</head>
+<body>
+  <header class="nl-top">
+    <a class="nl-brand" href="../"><span class="nl-badge">NL</span> 非线性系统仿真实践</a>
+    <div class="nl-actions">
+      <a class="nl-btn nl-btn-ghost" href="./第06次课_教学课件_混沌与分岔.html">返回第06次课课件</a>
+    </div>
+  </header>
+
+  <main class="nl-wrap">
+    <div class="nl-hero">
+      <h1>补充专节 · \(\mu_n\) 与 \(R_n\) 怎么算</h1>
+      <p>第06次课「混沌与分岔」配套：用 Logistic 映射讲清分岔点 \(\mu_n\)、超稳定点 \(R_n\) 的原理、步骤与具体算例，并说明二者如何用于费根鲍姆常数。</p>
+    </div>
+
+    <div class="nl-card sec" id="toc">
+      <h2>本页目录</h2>
+      <div class="toc">
+        <a href="#overview">1. 总览</a>
+        <a href="#mu">2. 分岔点 \(\mu_n\)</a>
+        <a href="#mu1">例 A：\(\mu_1=3\)</a>
+        <a href="#mu2">例 B：\(\mu_2=1+\sqrt{6}\)</a>
+        <a href="#rn">3. 超稳定点 \(R_n\)</a>
+        <a href="#r-examples">例 C：\(R_0,R_1\)</a>
+        <a href="#relation">4. \(\mu_n\) 与 \(R_n\) 的关系</a>
+        <a href="#delta">5. 费根鲍姆常数算例</a>
+        <a href="#demo">6. 互动验算</a>
+        <a href="#summary">7. 小结</a>
+      </div>
+    </div>
+
+    <!-- ========== 1 ========== -->
+    <section class="nl-card sec" id="overview">
+      <h2>1. 总览：我们在算什么？</h2>
+      <p>考虑 Logistic 映射</p>
+      <div class="formula">\[
+        x_{k+1}=f_\mu(x_k)=\mu x_k(1-x_k),\qquad \mu\in(0,4],\ x\in[0,1].
+      \]</div>
+      <p>随着 \(\mu\) 增大，吸引子经历倍周期级联：稳定周期 \(1\to 2\to 4\to 8\to\cdots\to\) 混沌。</p>
+      <ul>
+        <li><strong>分岔点 \(\mu_n\)</strong>：周期 \(2^{n-1}\) 失稳、周期 \(2^n\) 诞生的临界参数。判据是乘子 \(\lambda=-1\)。</li>
+        <li><strong>超稳定点 \(R_n\)</strong>：周期 \(2^n\) 轨恰好经过临界点 \(x=1/2\) 的参数。此时 \(\lambda=0\)，方程最易数值求解。</li>
+      </ul>
+      <div class="callout">
+        二者都不是“随便取的数”：\(\mu_n\) 来自稳定性临界条件；\(R_n\) 来自“周期轨过顶点”的几何条件。同一窗口内满足
+        \(\mu_n &lt; R_n &lt; \mu_{n+1}\)。
+      </div>
+    </section>
+
+    <!-- ========== 2 ========== -->
+    <section class="nl-card sec" id="mu">
+      <h2>2. 分岔点 \(\mu_n\)：原理与计算过程</h2>
+
+      <h3>2.1 原理</h3>
+      <p>设 \(\{x_0,x_1,\ldots,x_{p-1}\}\) 是周期 \(p\) 点，乘子（或称 Floquet 乘子）为</p>
+      <div class="formula">\[
+        \lambda=\prod_{j=0}^{p-1} f_\mu'(x_j)
+        =\prod_{j=0}^{p-1}\mu(1-2x_j).
+      \]</div>
+      <ul>
+        <li>\(|\lambda|&lt;1\)：周期轨吸引（稳定）</li>
+        <li>\(|\lambda|&gt;1\)：周期轨排斥（失稳）</li>
+        <li>\(\lambda=-1\)：发生<strong>翻转（倍周期）分岔</strong>——附近长出周期 \(2p\) 的新轨</li>
+      </ul>
+      <p>因此，第 \(n\) 次倍周期分岔点 \(\mu_n\) 定义为：周期 \(p=2^{n-1}\) 的吸引轨满足 \(\lambda=-1\) 时的 \(\mu\)。</p>
+
+      <h3>2.2 通用计算步骤</h3>
+      <ol class="steps">
+        <li>写出周期条件 \(f_\mu^{p}(x)=x\)，并排除更短周期的解。</li>
+        <li>得到周期点 \(x_0(\mu),\ldots,x_{p-1}(\mu)\)（解析或数值）。</li>
+        <li>构造 \(\lambda(\mu)=\prod_j \mu(1-2x_j(\mu))\)。</li>
+        <li>解方程 \(\lambda(\mu)=-1\)，取落在正确参数窗口中的根，即 \(\mu_n\)。</li>
+      </ol>
+
+      <h3 id="mu1">例 A · \(\mu_1=3\)（1→2）</h3>
+      <p><strong>步骤 1–2.</strong> 不动点：\(f(x)=x\Rightarrow x^*=0\) 或 \(x^*=1-1/\mu\)（\(\mu&gt;1\) 时后者在 \((0,1)\)）。</p>
+      <p><strong>步骤 3.</strong> \(f'(x)=\mu(1-2x)\)，代入 \(x^*=1-1/\mu\)：</p>
+      <div class="formula">\[
+        f'(x^*)=2-\mu.
+      \]</div>
+      <p><strong>步骤 4.</strong> 令 \(\lambda=-1\)：</p>
+      <div class="formula">\[
+        2-\mu=-1 \;\Rightarrow\; \mu_1=3.
+      \]</div>
+      <div class="callout ok">
+        当 \(1&lt;\mu&lt;3\) 时 \(|2-\mu|&lt;1\)，不动点稳定；\(\mu=3\) 时刚好失稳并分岔出 2 周期。
+      </div>
+
+      <h3 id="mu2">例 B · \(\mu_2=1+\sqrt{6}\)（2→4）</h3>
+      <p><strong>步骤 1–2.</strong> 2 周期点满足 \(f(f(x))=x\) 且不是不动点，解析解为</p>
+      <div class="formula">\[
+        x_\pm=\frac{\mu+1\pm\sqrt{(\mu+1)(\mu-3)}}{2\mu}
+        \quad(\mu&gt;3).
+      \]</div>
+      <p>并有 \(x_++x_-=(\mu+1)/\mu\)，\(x_+x_-=(\mu+1)/\mu^2\)。</p>
+      <p><strong>步骤 3.</strong> 复合映射导数</p>
+      <div class="formula">\[
+        (f\circ f)'(x_\pm)=f'(x_+)f'(x_-)
+        =\mu^2(1-2x_+)(1-2x_-).
+      \]</div>
+      <p>把和、积代入，化简得闭式：</p>
+      <div class="formula">\[
+        (f\circ f)'=-\mu^2+2\mu+4.
+      \]</div>
+      <p><strong>步骤 4.</strong> 令 \(\lambda=-1\)：</p>
+      <div class="formula">\[
+        -\mu^2+2\mu+4=-1
+        \;\Rightarrow\;
+        \mu^2-2\mu-5=0
+        \;\Rightarrow\;
+        \mu=1\pm\sqrt{6}.
+      \]</div>
+      <p>取大于 3 的根：</p>
+      <div class="formula">\[
+        \mu_2=1+\sqrt{6}\approx 3.4494897428.
+      \]</div>
+      <div class="callout">
+        课件里写的 \(\mu_2\approx 3.44949\)，就是 \(1+\sqrt{6}\) 的小数近似，不是经验凑数。
+      </div>
+
+      <h3>2.3 \(n\ge 3\)：为何改用数值？</h3>
+      <p>周期 \(4,8,16,\ldots\) 对应的 \(f^{2^{n-1}}(x)=x\) 是高次多项式，一般<strong>没有</strong>像 \(1+\sqrt{6}\) 那样的简洁闭式。实务上对 \(\lambda(\mu)+1=0\) 做二分 / 牛顿 / 参数延拓。常见结果：</p>
+      <table class="data">
+        <thead>
+          <tr><th>分岔</th><th>周期变化</th><th class="num">\(\mu_n\)</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>\(\mu_1\)</td><td>1→2</td><td class="num">3（精确）</td></tr>
+          <tr><td>\(\mu_2\)</td><td>2→4</td><td class="num">\(1+\sqrt{6}\approx 3.449490\)</td></tr>
+          <tr><td>\(\mu_3\)</td><td>4→8</td><td class="num">≈ 3.544090</td></tr>
+          <tr><td>\(\mu_4\)</td><td>8→16</td><td class="num">≈ 3.564407</td></tr>
+          <tr><td>\(\mu_5\)</td><td>16→32</td><td class="num">≈ 3.568759</td></tr>
+          <tr><td>\(\mu_\infty\)</td><td>→混沌</td><td class="num">≈ 3.569946</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <!-- ========== 3 ========== -->
+    <section class="nl-card sec" id="rn">
+      <h2>3. 超稳定点 \(R_n\)：原理与计算过程</h2>
+
+      <h3>3.1 为什么出现 \(x=1/2\)？</h3>
+      <p>对 Logistic，\(f'(x)=\mu(1-2x)\)，故</p>
+      <div class="formula">\[
+        f'\!\left(\tfrac12\right)=0.
+      \]</div>
+      <p>\(x=1/2\) 是抛物线顶点，也是映射的<strong>临界点</strong>。若某条周期轨经过它，则乘子里含零因子，于是 \(\lambda=0\)——称为<strong>超稳定</strong>周期轨。</p>
+      <div class="callout warn">
+        重要澄清：一般周期轨<strong>并不一定</strong>过 \(1/2\)。只有调到特殊参数 \(R_n\) 时，吸引的 \(2^n\) 周期轨才会刚好经过顶点。我们“找 \(1/2\)”是为了计算方便，不是动力学强迫每条周期轨都过该点。
+      </div>
+
+      <h3>3.2 公式 \(f^{2^n}(1/2)=1/2\) 的含义</h3>
+      <ul>
+        <li>\(f^{2}(x)=f(f(x))\)：迭代 2 次；\(f^{2^n}\) 表示迭代 \(2^n\) 次（不是把 \(f\) 做代数幂）。</li>
+        <li>\(f^{2^n}(1/2)=1/2\) 表示：从 \(1/2\) 出发，走完长度 \(2^n\) 的一圈后又回到 \(1/2\)。</li>
+        <li>这正是“\(1/2\) 属于某条 \(2^n\) 周期轨”的数学写法；对固定 \(n\)，它是关于 \(\mu\) 的标量方程，根记为 \(R_n\)。</li>
+      </ul>
+
+      <h3>3.3 计算步骤</h3>
+      <ol class="steps">
+        <li>定义 \(g_n(\mu)=f_\mu^{2^n}(1/2)-1/2\)。</li>
+        <li>在已知窗口 \((\mu_n,\mu_{n+1})\) 内对 \(g_n(\mu)=0\) 做二分（或牛顿）。</li>
+        <li>得到的根就是超稳定参数 \(R_n\)。</li>
+      </ol>
+
+      <h3 id="r-examples">例 C · \(R_0\) 与 \(R_1\)</h3>
+      <p><strong>\(n=0\)（周期 1，超稳定不动点）</strong></p>
+      <div class="formula">\[
+        f(1/2)=1/2
+        \;\Rightarrow\;
+        \mu\cdot\tfrac14=\tfrac12
+        \;\Rightarrow\;
+        R_0=2.
+      \]</div>
+      <p>此时不动点正好落在顶点，\(\lambda=f'(1/2)=0\)。</p>
+
+      <p><strong>\(n=1\)（周期 2，超稳定）</strong></p>
+      <div class="formula">\[
+        f(f(1/2))=1/2.
+      \]</div>
+      <p>先算 \(f(1/2)=\mu/4\)，再代入：</p>
+      <div class="formula">\[
+        f\!\left(\frac{\mu}{4}\right)
+        =\mu\cdot\frac{\mu}{4}\left(1-\frac{\mu}{4}\right)
+        =\frac{\mu^2}{4}-\frac{\mu^3}{16}
+        =\frac12.
+      \]</div>
+      <p>整理（并去掉对应不动点/其它根的因子）后得到</p>
+      <div class="formula">\[
+        R_1=1+\sqrt{5}\approx 3.2360679775.
+      \]</div>
+      <p>数值核对：在 \(\mu=R_1\) 时，2 周期两点之一恰为 \(0.5\)，另一点为 \(f(0.5)=R_1/4\approx 0.809\)，且乘子 \(\lambda=0\)。</p>
+
+      <table class="data">
+        <thead>
+          <tr><th>\(n\)</th><th>周期</th><th class="num">\(R_n\)（约）</th><th>备注</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>0</td><td>1</td><td class="num">2.0000000000</td><td>精确：\(R_0=2\)</td></tr>
+          <tr><td>1</td><td>2</td><td class="num">3.2360679775</td><td>精确：\(1+\sqrt{5}\)</td></tr>
+          <tr><td>2</td><td>4</td><td class="num">3.4985616993</td><td>数值</td></tr>
+          <tr><td>3</td><td>8</td><td class="num">3.5546408628</td><td>数值</td></tr>
+          <tr><td>4</td><td>16</td><td class="num">3.5666673799</td><td>数值</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <!-- ========== 4 ========== -->
+    <section class="nl-card sec" id="relation">
+      <h2>4. \(\mu_n\) 与 \(R_n\) 的关系：能互相算吗？</h2>
+      <p>在同一个 \(2^n\) 周期窗口内，参数从小到大经历三次关键事件：</p>
+      <ol>
+        <li><strong>\(\mu_n\)</strong>：\(2^{n-1}\) 失稳，\(2^n\) 诞生（\(\lambda=-1\)）</li>
+        <li><strong>\(R_n\)</strong>：\(2^n\) 过 \(1/2\)，超稳定（\(\lambda=0\)）</li>
+        <li><strong>\(\mu_{n+1}\)</strong>：\(2^n\) 失稳，\(2^{n+1}\) 诞生（又 \(\lambda=-1\)）</li>
+      </ol>
+      <div class="formula">\[
+        \mu_n &lt; R_n &lt; \mu_{n+1},\qquad
+        \lim_{n\to\infty}\mu_n=\lim_{n\to\infty}R_n=\mu_\infty.
+      \]</div>
+      <table class="data">
+        <thead>
+          <tr><th>问题</th><th>答案</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>\(R_n\) 只能算费根鲍姆常数吗？</td><td>不是。它是窗口中心标记，也可估 \(\mu_\infty\)、画分岔结构。</td></tr>
+          <tr><td>\(R_n\) 等于 \(\mu_n\) 吗？</td><td>不等于。例如 \(R_1\approx 3.236\)，而 \(\mu_1=3\)、\(\mu_2\approx 3.449\)。</td></tr>
+          <tr><td>能用 \(R_n\) 直接当 \(\mu_n\) 吗？</td><td>不能。精确 \(\mu_n\) 仍应解 \(\lambda=-1\)。</td></tr>
+          <tr><td>能用 \(R_n\) 间接估 \(\mu\) 吗？</td><td>可以。大 \(n\) 时用同一 \(\delta\) 标度逼近 \(\mu_\infty\) 及邻近分岔点。</td></tr>
+        </tbody>
+      </table>
+      <div class="callout">
+        实用策略：小 \(n\) 追求精确时算 \(\mu_n\)（\(\lambda=-1\)）；要快速得到一长串参数并估 \(\delta\) 时，优先算 \(R_n\)（单变量方程，更稳）。
+      </div>
+    </section>
+
+    <!-- ========== 5 ========== -->
+    <section class="nl-card sec" id="delta">
+      <h2>5. 费根鲍姆常数：用 \(\mu_n\) 或 \(R_n\) 怎么算</h2>
+      <p>第一费根鲍姆常数定义为相邻分岔间隔比的极限：</p>
+      <div class="formula">\[
+        \delta=\lim_{n\to\infty}\frac{\mu_n-\mu_{n-1}}{\mu_{n+1}-\mu_n}
+        \approx 4.669201609\ldots
+      \]</div>
+      <p>把 \(\mu_n\) 换成 \(R_n\) 同样收敛到同一个 \(\delta\)：</p>
+      <div class="formula">\[
+        \delta=\lim_{n\to\infty}\frac{R_n-R_{n-1}}{R_{n+1}-R_n}.
+      \]</div>
+
+      <h3>算例（用分岔点）</h3>
+      <p>取 \(\mu_1=3\)，\(\mu_2=1+\sqrt{6}\)，\(\mu_3\approx 3.544090\)，\(\mu_4\approx 3.564407\)：</p>
+      <div class="formula">\[
+        \delta_2=\frac{\mu_2-\mu_1}{\mu_3-\mu_2}
+        \approx\frac{0.449490}{0.094601}\approx 4.751,
+      \]</div>
+      <div class="formula">\[
+        \delta_3=\frac{\mu_3-\mu_2}{\mu_4-\mu_3}
+        \approx\frac{0.094601}{0.020317}\approx 4.656.
+      \]</div>
+      <p>再往下 \(\delta_n\) 迅速靠近 \(4.6692\ldots\)。</p>
+
+      <h3>算例（用超稳定点，往往更方便）</h3>
+      <p>取 \(R_0=2\)，\(R_1=1+\sqrt{5}\)，\(R_2\approx 3.498562\)，\(R_3\approx 3.554641\)：</p>
+      <div class="formula">\[
+        \delta_1=\frac{R_1-R_0}{R_2-R_1}
+        \approx\frac{1.236068}{0.262494}\approx 4.709,
+      \]</div>
+      <div class="formula">\[
+        \delta_2=\frac{R_2-R_1}{R_3-R_2}
+        \approx\frac{0.262494}{0.056079}\approx 4.681.
+      \]</div>
+      <p>费根鲍姆当初正是对 Logistic 等单峰映射把这些比值算出来，发现极限普适，才得到常数 \(\delta\)。</p>
+    </section>
+
+    <!-- ========== 6 ========== -->
+    <section class="nl-card sec" id="demo">
+      <h2>6. 互动验算</h2>
+      <p>下面用浏览器直接验算：给定 \(\mu\)，估计周期 \(p\) 轨的乘子 \(\lambda\)；并求解低阶 \(R_n\)。</p>
+      <div class="demo">
+        <div>
+          <label for="muInput">参数 \(\mu\)</label>
+          <input id="muInput" type="number" step="0.0001" value="3.2">
+          <label for="periodInput">假定周期 \(p\)（建议 1、2、4、8）</label>
+          <input id="periodInput" type="number" step="1" min="1" value="2">
+          <button class="nl-btn nl-btn-primary" type="button" id="btnLambda">计算乘子 λ</button>
+          <button class="nl-btn" type="button" id="btnRn" style="margin-left:8px">求 R₀…R₄</button>
+          <p class="note">乘子接近 \(-1\) 说明靠近分岔；接近 \(0\) 说明靠近超稳定。</p>
+        </div>
+        <div class="out" id="out">点击按钮开始计算…</div>
+      </div>
+    </section>
+
+    <!-- ========== 7 ========== -->
+    <section class="nl-card sec" id="summary">
+      <h2>7. 小结（课堂一句话版）</h2>
+      <ul>
+        <li><strong>算 \(\mu_n\)</strong>：找周期 \(2^{n-1}\) 轨，令乘子 \(\lambda=-1\)。前两个可解析：\(\mu_1=3\)，\(\mu_2=1+\sqrt{6}\)。</li>
+        <li><strong>算 \(R_n\)</strong>：令 \(f^{2^n}(1/2)=1/2\)。前两个可解析：\(R_0=2\)，\(R_1=1+\sqrt{5}\)。</li>
+        <li><strong>为什么是 \(1/2\)</strong>：因为这里 \(f'=0\)；不是“周期一定过它”，而是“我们挑选过它的参数”。</li>
+        <li><strong>二者关系</strong>：\(\mu_n&lt;R_n&lt;\mu_{n+1}\)；都能用来逼近费根鲍姆 \(\delta\)，但不要把 \(R_n\) 误当成 \(\mu_n\)。</li>
+      </ul>
+      <p class="merge-note">
+        部署说明：本页可单独挂到
+        <span class="kbd">nonlinear/第06次课_混沌与分岔/</span>
+        下；若要并入主课件，把
+        <span class="kbd">section-mu-rn.inc.html</span>
+        中的区块粘贴到
+        <span class="kbd">第06次课_教学课件_混沌与分岔.html</span>
+        的费根鲍姆章节附近即可。
+      </p>
+    </section>
+  </main>
+
+  <script>
+    (function () {
+      function f(mu, x) { return mu * x * (1 - x); }
+      function fprime(mu, x) { return mu * (1 - 2 * x); }
+
+      function estimateMultiplier(mu, p) {
+        // Iterate from x=0.5, discard transient, then sample a p-cycle and product f'
+        var x = 0.5, i, j, start, lam, pts, y;
+        for (i = 0; i < 4000; i++) x = f(mu, x);
+        start = x;
+        pts = [];
+        for (j = 0; j < p; j++) {
+          pts.push(x);
+          x = f(mu, x);
+        }
+        // residual: how well it closed
+        var closeErr = Math.abs(x - start);
+        lam = 1;
+        for (j = 0; j < p; j++) lam *= fprime(mu, pts[j]);
+        return { lam: lam, closeErr: closeErr, pts: pts };
+      }
+
+      function gSuperstable(mu, n) {
+        var x = 0.5, N = 1 << n, i;
+        for (i = 0; i < N; i++) x = f(mu, x);
+        return x - 0.5;
+      }
+
+      function findRn(n, lo, hi) {
+        var a = lo, b = hi, mid, ga, gm, k;
+        for (k = 0; k < 80; k++) {
+          mid = 0.5 * (a + b);
+          gm = gSuperstable(mid, n);
+          if (Math.abs(gm) < 1e-14) return mid;
+          ga = gSuperstable(a, n);
+          if (ga * gm <= 0) b = mid; else a = mid;
+        }
+        return 0.5 * (a + b);
+      }
+
+      var out = document.getElementById('out');
+
+      document.getElementById('btnLambda').addEventListener('click', function () {
+        var mu = parseFloat(document.getElementById('muInput').value);
+        var p = parseInt(document.getElementById('periodInput').value, 10);
+        if (!(mu > 0) || !(p >= 1)) {
+          out.textContent = '请输入有效的 μ 与周期 p。';
+          return;
+        }
+        var r = estimateMultiplier(mu, p);
+        var tip = '';
+        if (Math.abs(r.lam + 1) < 0.05) tip = '≈ 靠近 λ=-1（分岔附近）';
+        else if (Math.abs(r.lam) < 0.05) tip = '≈ 靠近 λ=0（超稳定附近）';
+        else if (Math.abs(r.lam) < 1) tip = '周期轨看起来吸引';
+        else tip = '周期轨看起来排斥 / 或假定周期不匹配';
+        out.textContent =
+          'μ = ' + mu + '\n' +
+          '假定周期 p = ' + p + '\n' +
+          '估计乘子 λ ≈ ' + r.lam.toFixed(8) + '\n' +
+          '闭轨残差 |x_p - x_0| ≈ ' + r.closeErr.toExponential(3) + '\n' +
+          '解读：' + tip + '\n' +
+          '采样点：' + r.pts.map(function (v) { return v.toFixed(6); }).join(', ');
+      });
+
+      document.getElementById('btnRn').addEventListener('click', function () {
+        var brackets = [
+          [0, 1.5, 2.5],
+          [1, 3.0, 3.3],
+          [2, 3.4, 3.5],
+          [3, 3.54, 3.56],
+          [4, 3.564, 3.569]
+        ];
+        var lines = ['超稳定参数 R_n（数值二分）:'];
+        var Rs = [];
+        brackets.forEach(function (b) {
+          var n = b[0], r = findRn(n, b[1], b[2]);
+          Rs.push(r);
+          lines.push('  n=' + n + '  period=' + (1 << n) + '  R ≈ ' + r.toFixed(12));
+        });
+        lines.push('');
+        lines.push('δ_n = (R_n - R_{n-1}) / (R_{n+1} - R_n):');
+        var n;
+        for (n = 1; n < Rs.length - 1; n++) {
+          var d = (Rs[n] - Rs[n - 1]) / (Rs[n + 1] - Rs[n]);
+          lines.push('  n=' + n + '  δ ≈ ' + d.toFixed(10));
+        }
+        lines.push('');
+        lines.push('目标：δ → 4.669201609...');
+        out.textContent = lines.join('\n');
+      });
+    })();
+  </script>
+</body>
+</html>
